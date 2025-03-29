@@ -1,11 +1,8 @@
 import requests
-import time
 import os
 
-LINE_TOKEN = os.getenv("ujZdTKxVRv3KTdkkdMhWpKAO5C6MZuiWdOI8Kuj1U3C")
-USGS_API = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/significant_hour.geojson'
-
-latest_event_id = None
+LINE_TOKEN = os.getenv("LINE_TOKEN")
+USGS_API = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/significant_week.geojson'
 
 def send_line_notify(message):
     url = 'https://notify-api.line.me/api/notify'
@@ -13,23 +10,23 @@ def send_line_notify(message):
     data = {'message': message}
     requests.post(url, headers=headers, data=data)
 
-    try:
-        response = requests.get(USGS_API)
-        data = response.json()
+try:
+    response = requests.get(USGS_API)
+    data = response.json()
+    print("📡 ข้อมูลที่ได้:", data)  # debug
 
-        if data['features']:
-            event = data['features'][0]
-            event_id = event['id']
-            mag = event['properties']['mag']
-            place = event['properties']['place']
+    if data['features']:
+        event = data['features'][0]
+        event_id = event['id']
+        mag = event['properties']['mag']
+        place = event['properties']['place']
 
-            if event_id != latest_event_id:
-                latest_event_id = event_id
-                message = f"🌍 แผ่นดินไหว ขนาด {mag} บริเวณ {place}"
-                send_line_notify(message)
-                print("✅ แจ้งเตือน:", message)
+        message = f"🌍 แผ่นดินไหว ขนาด {mag} บริเวณ {place}"
+        send_line_notify(message)
+        print("✅ แจ้งเตือน:", message)
 
-    except Exception as e:
-        print("❌ Error:", e)
+    else:
+        print("ℹ️ ไม่มีข้อมูลแผ่นดินไหวในช่วงเวลานี้")
 
-    time.sleep(300)  # รอ 5 นาที
+except Exception as e:
+    print("❌ Error:", e)
