@@ -38,16 +38,23 @@ try:
     features = data.get("features", [])
     count = 0
 
+    print(f"🔍 พบทั้งหมด {len(features)} เหตุการณ์")
+
     for event in features:
         props = event["properties"]
         geo = event["geometry"]
-        event_id = event.get("id")  # ใช้ event['id'] ตรงจาก USGS
+        raw_event_id = event.get("id")
         mag = props.get("mag", 0)
         place = props.get("place", "")
         coords = geo.get("coordinates", [None, None])
         lon, lat = coords[0], coords[1]
 
-        if event_id and event_id not in notified_ids and mag >= 5.0 and is_in_target_region(lat, lon, place):
+        # ใช้ event_id ลูกผสม เพื่อป้องกันซ้ำแบบแน่นอน
+        event_id = f"{raw_event_id}_{round(mag, 1)}"
+
+        print(f"🧾 ตรวจสอบ: {event_id} | {place} | M{mag} | lat={lat}, lon={lon}")
+
+        if event_id not in notified_ids and mag >= 5.0 and is_in_target_region(lat, lon, place):
             message = f"🌍 แผ่นดินไหว {mag} บริเวณ {place}"
             send_line_notify(message)
             print("✅ แจ้งเตือน:", message)
@@ -60,6 +67,8 @@ try:
 
             notified_ids.add(event_id)
             count += 1
+        else:
+            print("🚫 ยังไม่เข้าเงื่อนไข หรือเคยแจ้งแล้ว\n")
 
     if count == 0:
         print("ℹ️ ไม่มีเหตุการณ์ใหม่")
