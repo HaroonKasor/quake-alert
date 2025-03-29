@@ -13,7 +13,6 @@ def send_line_notify(message):
     data = {'message': message}
     requests.post(url, headers=headers, data=data)
 
-while True:
     try:
         response = requests.get(USGS_API)
         data = response.json()
