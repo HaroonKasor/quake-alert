@@ -32,6 +32,7 @@ try:
     features = data.get("features", [])
 
     count = 0
+    log_entries = []
     for event in features:
         props = event["properties"]
         geo = event["geometry"]
@@ -45,14 +46,16 @@ try:
             send_line_notify(message)
             print("✅ แจ้งเตือน:", message)
 
-            # เขียน log ลงไฟล์
-            with open("quake_log.txt", "a", encoding="utf-8") as f:
-                f.write(f"[{datetime.now()}] {message}\n")
-
+            log_entries.append(f"[{datetime.now()}] {message}")
             count += 1
 
     if count == 0:
         print("ℹ️ ไม่มีเหตุการณ์เข้าเงื่อนไข")
+
+    # เขียน log ลงไฟล์
+    if log_entries:
+        with open("quake_log.txt", "a", encoding="utf-8") as f:
+            f.write("\n".join(log_entries) + "\n")
 
 except Exception as e:
     print("❌ Error:", e)
