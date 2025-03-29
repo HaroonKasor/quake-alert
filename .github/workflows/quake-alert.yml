@@ -1,0 +1,26 @@
+name: Quake Alert Bot
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'  # ทุก 5 นาที
+  workflow_dispatch:
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run quake alert bot
+        env:
+          LINE_TOKEN: ${{ secrets.LINE_TOKEN }}
+        run: python main.py
