@@ -13,20 +13,33 @@ def send_line_notify(message):
 try:
     response = requests.get(USGS_API)
     data = response.json()
-    print("📡 ข้อมูลที่ได้:", data)  # debug
+    features = data.get("features", [])
 
-    if data['features']:
-        event = data['features'][0]
-        event_id = event['id']
-        mag = event['properties']['mag']
-        place = event['properties']['place']
+    count = 0
+    for event in features:
+        props = event["properties"]
+        geo = event["geometry"]
+        mag = props.get("mag", 0)
+        place = props.get("place", "")
+        coords = geo.get("coordinates", [None, None])  # [lon, lat, depth]
+        lon, lat = coords[0], coords[1]
 
-        message = f"🌍 แผ่นดินไหว ขนาด {mag} บริเวณ {place}"
-        send_line_notify(message)
-        print("✅ แจ้งเตือน:", message)
+        # เงื่อนไขกรอง
+        in_asia = (
+            any(keyword in place for keyword in [
+                "Thailand", "Asia", "Myanmar", "Laos", "Vietnam", "Malaysia"
+            ])
+            or (lat is not None and 0 <= lat <= 40 and 60 <= lon <= 120)
+        )
 
-    else:
-        print("ℹ️ ไม่มีข้อมูลแผ่นดินไหวในช่วงเวลานี้")
+        if mag >= 5.0 and in_asia:
+            message = f"🌍 แผ่นดินไหว {mag} บริเวณ {place}"
+            send_line_notify(message)
+            print("✅ แจ้งเตือน:", message)
+            count += 1
+
+    if count == 0:
+        print("ℹ️ ไม่มีเหตุการณ์เข้าเงื่อนไข")
 
 except Exception as e:
     print("❌ Error:", e)
